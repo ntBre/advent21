@@ -1,0 +1,3 @@
+#+title: Advent of Code 2021
+
+My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 2021.
