@@ -1,3 +1,44 @@
 #+title: Advent of Code 2021
 
 My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 2021.
+
+* Day 1
+  For part 1, just save the last element and check if the new one is
+  greater than the last. If so, increment the count:
+
+  #+begin_src lisp
+    (defun count-increases (lst)
+      (let ((last (car lst))
+	    (count 0))
+	(loop for l in lst
+	      do (when (> l last)
+		   (incf count))
+		 (setf last l))
+	count))
+  #+end_src
+
+  Since I initialize =last= to =(car lst)= I guess I should start the
+  loop on =(cdr lst)= to save one iteration.
+
+  For part 2, I reused the same =count-increases= function after doing
+  one loop over the list and computing rolling sums of the last 3
+  elements:
+
+  #+begin_src lisp
+    (defun three-buf (lst)
+      (loop for i = 0 then (1+ i)
+	    while (< i (- (length lst) 2))
+	    collect (+ (elt lst i)
+		       (elt lst (+ 1 i))
+		       (elt lst (+ 2 i)))))
+  #+end_src
+
+  As usual, I had an off-by-one error in the first iteration where I
+  subtracted 3 in the while portion instead of 2, but I caught it by
+  comparing to the number of 3-element windows the example was
+  supposed to have.
+
+  It would be more efficient to combine these loops instead of doing
+  them in two phases, but doing it this way let me reuse the
+  =count-increases= function I already wrote (and tested) from the
+  first part.
