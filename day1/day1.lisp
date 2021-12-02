@@ -3,34 +3,28 @@
 			      240 269 260
 			      263))
 
-(defun count-increases (lst)
-  (let ((last (car lst))
-	(count 0))
-    (loop for l in lst
-	  do (when (> l last)
-	       (incf count))
-	     (setf last l))
-    count))
-
 (defun load-input (filename)
   (with-open-file (in filename :direction :input)
     (loop for line = (read-line in nil nil)
 	  while line
 	    collect (read-from-string line))))
 
-;; compute 3buf sums, then loop over those using count-increases
-(defun three-buf (lst)
-  (loop for i = 0 then (1+ i)
-	while (< i (- (length lst) 2))
-	collect (+ (elt lst i)
-		   (elt lst (+ 1 i))
-		   (elt lst (+ 2 i)))))
+(defun count-increases (lst)
+  (length
+   (remove-if-not
+    #'(lambda (x) (> (cadr x) (car x)))
+    (mapcar #'list lst (cdr lst)))))
 
 (defun part-1 ()
-  (count-increases (load-input "input.txt")))
+  (let ((input (load-input "input.txt")))
+    (count-increases input)))
 
 (defun part-2 ()
-  (count-increases (three-buf (load-input "input.txt"))))
+  (let ((input (load-input "input.txt")))
+    (count-increases
+     (mapcar #'+ input
+	     (cdr input)
+	     (cddr input)))))
 
 (defun test ()
   (assert (= (part-1) 1832))

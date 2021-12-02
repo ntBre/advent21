@@ -43,6 +43,36 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
   =count-increases= function I already wrote (and tested) from the
   first part.
 
+** Revision
+   After seeing some of the solutions online, I rewrote my answer in a
+   more functional form by using some zipping and filtering in
+   =count-increases=.
+
+   #+begin_src lisp
+     (defun count-increases (lst)
+       (length
+	(remove-if-not
+	 #'(lambda (x) (> (cadr x) (car x)))
+	 (mapcar #'list lst (cdr lst)))))
+   #+end_src
+
+   For the second part, you can first "zip" the triples together with
+   =+= and then use the results in =count-increases= much like in my
+   original solution.
+
+   #+begin_src lisp
+     (defun part-2 ()
+       (let ((input (load-input "input.txt")))
+	 (count-increases
+	  (mapcar #'+ input
+		  (cdr input)
+		  (cddr input)))))
+   #+end_src
+
+   Obviously this is quite similar to my original solution overall
+   with the double loops, but now the two loops are implicitly
+   contained in the =mapcar= calls instead of explicitly using =loop=.
+
 * Day 2
   Today I just wrote everything at the top level of the file and it
   paid off smoothly. This is the solution to the second part, but the
@@ -64,7 +94,8 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
       (with-open-file (in "input.txt" :direction :input)
 	(loop for line = (read-line in nil nil)
 	      while line
-	      do (destructuring-bind (dir dist) (mapcar #'read-from-string (uiop:split-string line))
+	      do (destructuring-bind (dir dist)
+		     (mapcar #'read-from-string (uiop:split-string line))
 		   (ecase dir
 		     (forward
 		      (incf h dist)
