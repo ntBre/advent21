@@ -42,3 +42,36 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
   them in two phases, but doing it this way let me reuse the
   =count-increases= function I already wrote (and tested) from the
   first part.
+
+* Day 2
+  Today I just wrote everything at the top level of the file and it
+  paid off smoothly. This is the solution to the second part, but the
+  difference from the first part is only inside the =ecase= cases (and
+  the addition of =a=, the aim) where I had to update the
+  interpretation of the commands from the input.
+
+  Today I learned that =ecase= does not work with string keys, which
+  actually made it a bit easier since I could =mapcar= over the split
+  line instead of only using =read-from-string= on the cadr of the
+  line. Reading the strings from the string yields symbols with the
+  same name so I can use symbols as the keys in the =ecase=. You also
+  don't quote the symbols when using them as keys.
+
+  #+begin_src lisp
+    (let ((h 0)
+	  (d 0)
+	  (a 0))
+      (with-open-file (in "input.txt" :direction :input)
+	(loop for line = (read-line in nil nil)
+	      while line
+	      do (destructuring-bind (dir dist) (mapcar #'read-from-string (uiop:split-string line))
+		   (ecase dir
+		     (forward
+		      (incf h dist)
+		      (incf d (* a dist)))
+		     (down
+		      (incf a dist))
+		     (up
+		      (decf a dist)))))
+	(print (* h d))))
+  #+end_src
