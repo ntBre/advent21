@@ -18,13 +18,7 @@
 	  while line
 	    collect (read-from-string line))))
 
-;; first part
-(count-increases (load-input "input.txt"))
-
 ;; compute 3buf sums, then loop over those using count-increases
-
-(defparameter *input* (load-input "input.txt"))
-
 (defun three-buf (lst)
   (loop for i = 0 then (1+ i)
 	while (< i (- (length lst) 2))
@@ -32,4 +26,13 @@
 		   (elt lst (+ 1 i))
 		   (elt lst (+ 2 i)))))
 
-(count-increases (three-buf *input*))
+(defun part-1 ()
+  (count-increases (load-input "input.txt")))
+
+(defun part-2 ()
+  (count-increases (three-buf (load-input "input.txt"))))
+
+(defun test ()
+  (assert (= (part-1) 1832))
+  (assert (= (part-2) 1858))
+  'pass)
