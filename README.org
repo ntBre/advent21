@@ -106,3 +106,89 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
 		      (decf a dist)))))
 	(print (* h d))))
   #+end_src
+
+* Day 3
+  That was a tough one. Definitely a substantial increase in
+  difficulty from the first two days I think. I'll have to try to come
+  up with a better solution later, but at least I got it to work after
+  about two hours. I think using arrays in Common Lisp was not a good
+  idea. It's a real pain not being able to grab a row with something
+  like =(aref arr 0)= if the array has more than one dimension. I
+  probably should have stuck with lists in the second part like I did
+  in the first part. Part 1 wasn't too bad:
+
+  #+begin_src lisp
+    (defun mask (counts)
+      (map 'list #'(lambda (x)
+		  (if (< x 0)
+		      0
+		      1))
+	      counts))
+
+    (defun to-bin (lst)
+      (let ((ret 0)
+	    (len (length lst)))
+	(loop for i = 0 then (1+ i)
+	      and l in lst
+	      do (setf ret
+		       (logior ret
+			       (ash l (- len i 1)))))
+	ret))
+
+    (defun part1 ()
+      (let* ((input (parse "inp.txt"))
+	     (len (length (car input)))
+	     (counts (make-array len)))
+	(dolist (num input)
+	  (loop for c across num
+		and i = 0 then (1+ i)
+		do (ecase c
+		     (#\0
+		      (decf (aref counts i)))
+		     (#\1
+		      (incf (aref counts i))))))
+	;; count > 0 => 1; < 0 => 0
+	(let* ((gam (to-bin (mask counts)))
+	       ;; now it works for both example and input
+	       (eps (logxor gam (ash #b111111111111
+				     (- (length counts) 12)))))
+	  (* gam eps))))
+  #+end_src
+
+  I just left the values as strings and looped across them, extracting
+  individual chars. I incremented/decremented values in a result
+  vector depending on whether the char is a 1 or 0, which lets me find
+  the most common value in each position. I don't think I'm using
+  "mask" correctly, but it converts a list of those counts such as =(2
+  -2 4 2 -2)= to 1s and 0s like =(1 0 1 1 0)=. That's basically the
+  answer for the gamma rate, so =to-bin= just converts that list to a
+  binary number. I thought taking the complement of that would give
+  the epsilon rate, but I think Common Lisp does two's complement
+  instead one's complement like I wanted. As a result, I had to XOR
+  the =to-bin= output with a bit vector of 1s.
+
+  My Part 2 feels like a bit of a disaster because of all the array
+  helper functions I had to write, but I guess the core logic isn't so
+  bad.
+
+  #+begin_src lisp
+    (defun o2-rating (filename)
+      (let ((inp (load-array (parse filename))))
+	(loop while (> (nrows inp) 1)
+	      for i from 0 below (ncols inp)
+	      for col = (column inp i)
+	      for mc = (most-common col)
+	      do (setf inp (del-rows
+			    #'(lambda (row) (/= (nth i row) mc))
+			    inp)))
+		 (to-bin (row inp 0))))
+  #+end_src
+
+  After loading the input as a bit array, I just loop over the columns
+  (while there is more than one row left), find the =most-common=
+  element in the column, and delete the rows where the most common
+  element isn't found. Finally, convert the remaining row to a binary
+  number just like before. Now that I think about it, this is a pretty
+  clean translation of the problem logic into Lisp, but as you can see
+  if you open the full code, the helper functions take up most of the
+  space.
