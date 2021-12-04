@@ -192,3 +192,29 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
   clean translation of the problem logic into Lisp, but as you can see
   if you open the full code, the helper functions take up most of the
   space.
+
+* Day 4
+  After swearing off arrays yesterday, I got pulled back to them
+  today. However, with the =row= and =col= accessors I wrote
+  yesterday, it was already a bit easier, and the static dimensions of
+  the bingo boards made it easier still. I chose to use negative
+  numbers to represent the numbers that had already been called. This
+  meant I was terrified to notice that 0 was a viable bingo number and
+  that Common Lisp doesn't have negative zero, but fortunately that
+  didn't affect the outcome of either part, at least for my input. Now
+  that I think about it, just setting the called number to a single
+  negative value instead of negating the value that was already there
+  would fix this problem.
+
+  I don't have much else to say about the code, so I won't paste any
+  of it here. These past two days have been noticeably harder than the
+  first two, but after finishing them, the solutions still follow very
+  clearly from the problem statement. The only real challenge has been
+  deciding how to represent the data. I made a poor choice yesterday,
+  which really slowed me down. Today a similar choice worked out much
+  better. It's really nice to see the solution being almost readable
+  in English from the code once I take care of the
+  representation. That's a bit more apparent in yesterday's solution
+  than today's, but both are applicable. Maybe I should try writing
+  the high-level solution first and then implementing it, in true
+  "wishful thinking" style from [[https://mitpress.mit.edu/sites/default/files/sicp/index.html][SICP]].
