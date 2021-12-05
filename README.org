@@ -218,3 +218,81 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
   than today's, but both are applicable. Maybe I should try writing
   the high-level solution first and then implementing it, in true
   "wishful thinking" style from [[https://mitpress.mit.edu/sites/default/files/sicp/index.html][SICP]].
+
+* Day 5
+  Today I used arrays again. Obviously I was being a bit hyperbolic
+  yesterday when I said I swore off arrays. After the pain of day 3, I
+  just realized that they aren't the answer to everything.
+
+  For today's solution, I packed all of the logic into the =parse=
+  function that extracts the data from the file. In =extract=, I use
+  cl-ppcre to extract each of the numbers from the string. I also
+  normalize the points such that x1 <= x2 and y1 <= y2. This
+  normalization is sufficient for the first part, but not for the
+  second. For the second part, I just checked all four cases for the
+  loops, which is quite ugly.
+
+  This code is also quite slow, even for the first part. I think I'll
+  spend some time learning to profile Common Lisp code today and see
+  if I can speed it up. Timing table for reference:
+
+  | Part | Real Time (s) |
+  |------+---------------|
+  |    1 |        38.149 |
+  |    2 |               |
+
+  Before profiling, my guess is that the slowdown is due to
+  =adjust-array=, which is probably resizing the array on nearly every
+  iteration. If profiling shows that is the case, I may try something
+  like Go's append, which doubles the dimensions each time to amortize
+  the cost of resizing. The code is also quite deeply nested, so I may
+  need to let =parse= actually just do the parsing and then do further
+  manipulation in a separate loop. That would allow me to close the
+  file earlier.
+
+  #+begin_src lisp
+    (defun extract (line)
+      "take lines of the form \"0,9 -> 5,9\" and return a list of the four
+      numbers"
+      (normalize
+       (mapcar #'read-from-string
+	       (cdr
+		(cl-ppcre:split
+		 "(\\d+),(\\d+) -> (\\d+),(\\d+)" line
+		 :with-registers-p t)))))
+
+    (defun parse (filename &optional part2)
+      (let ((grid (make-array '(1 1) :initial-element 0 :adjustable t)))
+	(with-open-file (in filename)
+	  (loop for line = (read-line in nil nil)
+		while line
+		do (destructuring-bind (x1 y1 x2 y2) (extract line)
+		     (destructuring-bind (r c) (array-dimensions grid)
+		       (let ((mx (max x1 x2))
+			     (my (max y1 y2)))
+			 (when (>= mx c) (setf c (1+ mx)))
+			 (when (>= my r) (setf r (1+ my)))
+			 (adjust-array grid (list r c))))
+		     (cond
+		       ((or (= x1 x2) (= y1 y2))
+			(loop for x from x1 upto x2
+			      do (loop for y from y1 upto y2
+				       do (incf (aref grid y x)))))
+		       ((and part2 (diag x1 y1 x2 y2))
+			(if (> x1 x2)
+			    (if (> y1 y2)
+				(loop for x from x1 downto x2
+				      and y from y1 downto y2
+				      do (incf (aref grid y x)))
+				(loop for x from x1 downto x2
+				      and y from y1 upto y2
+				      do (incf (aref grid y x))))
+			    (if (> y1 y2)
+				(loop for x from x1 upto x2
+				      and y from y1 downto y2
+				      do (incf (aref grid y x)))
+				(loop for x from x1 upto x2
+				      and y from y1 upto y2
+				      do (incf (aref grid y x))))))))))
+	grid))
+  #+end_src
