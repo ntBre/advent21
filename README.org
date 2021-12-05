@@ -239,7 +239,7 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
   | Part | Real Time (s) |
   |------+---------------|
   |    1 |        38.149 |
-  |    2 |               |
+  |    2 |        38.029 |
 
   Before profiling, my guess is that the slowdown is due to
   =adjust-array=, which is probably resizing the array on nearly every
