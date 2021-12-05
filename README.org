@@ -296,3 +296,55 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
 				      do (incf (aref grid y x))))))))))
 	grid))
   #+end_src
+
+** Profiling
+   Running =sb-sprof:with-profiling= didn't really give me what I
+   wanted. As a result, I just started guessing where the problem was
+   like I did before trying to profile.
+
+   I also downloaded FiveAM for testing and added both parts running
+   on both the example and the real input as tests. These results are
+   below, followed by definitions of the labels in the "Iteration"
+   column and the corresponding discussions.
+
+  | Iteration            | Real Time (s) |
+  |----------------------+---------------|
+  | Original             |        75.413 |
+  | Allocate double size |       143.139 |
+  | Final                |         0.063 |
+
+*** Original
+    The original formulation shown above, used as a baseline.
+
+*** Allocate double size
+    Instead of using
+
+      #+begin_src lisp
+	(when (>= mx c) (setf c (1+ mx)))
+	(when (>= my r) (setf r (1+ my)))
+      #+end_src
+
+      to adjust the size of the array, I tried
+
+      #+begin_src lisp
+	(when (>= mx c) (setf c (* 2 (1+ mx))))
+	(when (>= my r) (setf r (* 2 (1+ my))))
+      #+end_src
+
+      in line with my first guess as to the problem above. Obviously
+      this failed miserably, and I'm not quite sure why. This led me
+      to go back to profiling. Again, the profile I got was very poor,
+      probably because I wrote all of my logic in one function. To get
+      a better profile, I started refactoring the code.
+
+*** Final
+    Well this is a bit embarrassing. By doing the parsing first,
+    looping over the results once to determine the =max-x= and
+    =max-y=, I totally removed resizing the array and made the program
+    run instantaneously. I still didn't get the profiler to help me,
+    but my thoughts about the allocations appear to have been
+    correct. The refactor also helped to remove some of the deep
+    nesting and the =destructuring-bind= calls. I also took advantage
+    of the destructuring capability implicit in the =loop= macro, so
+    now the only =destructuring-bind= is in =normalize=.
+
