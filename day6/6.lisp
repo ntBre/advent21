@@ -55,5 +55,4 @@
 	     (setf (aref fish 8) zero)
 	     (incf (aref fish 6) zero)
 	     (format t "day ~a: ~a fish~%" i
-		     (loop for f across fish
-			   summing f)))))
+		     (reduce #'+ fish)))))

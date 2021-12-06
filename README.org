@@ -403,6 +403,5 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
 		 (setf (aref fish 8) zero)
 		 (incf (aref fish 6) zero)
 		 (format t "day ~a: ~a fish~%" i
-			 (loop for f across fish
-			       summing f)))))
+			 (reduce #'+ fish)))))
   #+end_src
