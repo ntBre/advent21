@@ -348,3 +348,61 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
     of the destructuring capability implicit in the =loop= macro, so
     now the only =destructuring-bind= is in =normalize=.
 
+* Day 6
+  As was probably intended, I thought today was very easy as I did
+  part 1. The naive approach of maintaining a list of all the fish
+  worked very easily for the first part, and I wrote a cute mapping
+  loop to update the list of fish and just called it 80 times.
+
+  #+begin_src lisp
+    (defun event-loop (fish)
+      (let ((new-fish '()))
+	(append (mapcar #'(lambda (f)
+			    (if (= 0 f)
+				(progn
+				  (push 8 new-fish)
+				  6)
+				(decf f)))
+			fish)
+		new-fish)))
+
+    (defun part1 ()
+      (loop for i from 0 upto 80
+	    and fish = (parse "input.txt") then (event-loop fish)
+	    do (format t "day ~a: ~a fish~%" i (length fish))))
+  #+end_src
+
+  Going up to 256 days, however, posed quite a problem for this
+  approach. After blowing the heap with my naive implementation, I
+  thought using a vector instead of a list would solve my issues, but
+  this made it no farther than the list implementation. Finally I
+  realized that all I really needed to do was keep track of the number
+  of fish at each count. This let me go from a list of trillions of
+  elements down to a list of 9 elements. My final solution is below. I
+  left more of the work in the =parse= function this time, so I
+  included that as well.
+
+  #+begin_src lisp
+    (defun parse2 (filename)
+      (let ((ret (make-array 9
+			     :element-type 'integer
+			     :initial-element 0))
+	    (fish
+	      (with-open-file (in filename)
+		(mapcar #'read-from-string (split "," (read-line in nil nil))))))
+	(loop for f in fish
+	      do (incf (aref ret f)))
+	ret))
+
+    (defun part2 ()
+      ;; use subseq with setf to "rotate" part of the list
+      (let ((fish (parse2 "input.txt")))
+	(loop for i from 1 upto 256
+	      and zero = (aref fish 0) then (aref fish 0)
+	      do (setf (subseq fish 0 8) (subseq fish 1))
+		 (setf (aref fish 8) zero)
+		 (incf (aref fish 6) zero)
+		 (format t "day ~a: ~a fish~%" i
+			 (loop for f across fish
+			       summing f)))))
+  #+end_src

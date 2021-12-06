@@ -1,3 +1,4 @@
+(ql:quickload :cl-ppcre)
 (use-package :cl-ppcre)
 
 (defun parse (filename)
@@ -7,24 +8,52 @@
 	  (mapcar #'read-from-string (split "," line)))))
 
 (defun event-loop (fish)
-  (let ((new-fish '()))
-    (append (mapcar #'(lambda (f)
-		(if (= 0 f)
-		    (progn
-		      (push 8 new-fish)
-		      6)
-		    (decf f)))
-		    fish)
-	    new-fish)))
+  (loop for i from 0 below (length fish)
+	do (if (= 0 (aref fish i))
+	       (progn
+		 (vector-push-extend 8 fish)
+		 (setf (aref fish i) 6))
+	       (decf (aref fish i))))
+  fish)
 
 (defun part1 ()
-  (loop for i from 0 upto 80
-	and fish = (parse "input.txt") then (event-loop fish)
-	do (format t "day ~a: ~a fish~%" i (length fish))))
+  (let* ((input (parse "ex.txt"))
+	 (l (length input))
+	 (fish (make-array l
+			   :element-type 'integer
+			   :initial-contents input
+			   :adjustable t
+			   :fill-pointer l)))
+    (loop for i from 0 upto 80
+	  and f = fish then (event-loop f)
+	  do (format t "day ~a: ~a fish~%" i (length f)))))
+
+;; instead of naively putting these in a list, I think I should
+;; maintain a list of the count of fish at each age
+
+;; each time through, rotate the list
+
+;; 0 goes to 8 and 6 the rest just shift over
+
+(defun parse2 (filename)
+  (let ((ret (make-array 9
+			 :element-type 'integer
+			 :initial-element 0))
+	(fish
+	  (with-open-file (in filename)
+	    (mapcar #'read-from-string (split "," (read-line in nil nil))))))
+    (loop for f in fish
+	  do (incf (aref ret f)))
+    ret))
 
 (defun part2 ()
-  ;; list not sufficient for this, need to use a vector like I thought
-  ;; initially
-  (loop for i from 0 upto 256
-	and fish = (parse "ex.txt") then (event-loop fish)
-	do (format t "day ~a: ~a fish~%" i (length fish))))
+  ;; use subseq with setf to "rotate" part of the list
+  (let ((fish (parse2 "input.txt")))
+    (loop for i from 1 upto 256
+	  and zero = (aref fish 0) then (aref fish 0)
+	  do (setf (subseq fish 0 8) (subseq fish 1))
+	     (setf (aref fish 8) zero)
+	     (incf (aref fish 6) zero)
+	     (format t "day ~a: ~a fish~%" i
+		     (loop for f across fish
+			   summing f)))))
