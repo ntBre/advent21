@@ -405,3 +405,43 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
 		 (format t "day ~a: ~a fish~%" i
 			 (reduce #'+ fish)))))
   #+end_src
+
+* Day 7
+  Today was quite easy. I was pretty worried after yesterday that a
+  naive/brute force approach would not work out, but these fears were
+  unfounded. The second part was a little slow to run, but not even as
+  slow as my initial day 5 solutions by a large margin. I feel like
+  there should be a way to narrow the search space or even go straight
+  to the answer just mathematically, but this will work for now. I'm
+  starting to use some of the more specific =loop= macro abilities
+  too.
+
+  The only difference between parts 1 and 2 is the =fuel-cost=
+  function. Within that, the only change is in the lambda defining how
+  to compute the cost of moving a certain distance.
+
+  #+begin_src lisp
+    (defun fuel-cost (crabs i)
+      "return the fuel cost of all the crabs moving to point i"
+      (reduce #'+ (mapcar #'(lambda (x)
+			      (abs (- x i)))
+			  crabs)))
+
+    (defun part1 ()
+      (let ((crabs (parse "input.txt")))
+	(loop for i from (apply #'min crabs) upto (apply #'max crabs)
+	      minimizing (fuel-cost crabs i))))
+
+    (defun fuel-costp (crabs i)
+      "return the fuel cost of all the crabs moving to point i"
+      (reduce #'+ (mapcar #'(lambda (x)
+			      (loop for i from 1 upto (abs (- x i))
+				    summing i))
+			  crabs)))
+
+    (defun part2 ()
+      (let ((crabs (parse "input.txt")))
+	(loop for i from (apply #'min crabs) upto (apply #'max crabs)
+	      minimizing (fuel-costp crabs i))))
+
+  #+end_src
