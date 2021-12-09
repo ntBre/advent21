@@ -89,8 +89,12 @@ lengths"
       (eight #b1111111)
       (nine  #b1111011))
   (format t "abcdefg~%")
+  (print-bin (logxor one seven)) ;; -> a
+  (print-bin (logand zero six nine one)) ;; f
+  (print-bin (logxor one (logand zero six nine one))) ;; c
+  (print-bin (logand two three five four)) ;; d
+  (print-bin (logxor four one (logand two three five four))) ;; b
   (print-bin (logand zero six nine))
-  (print-bin (logand two three five))
   )
   ;; xor 1-7 gives a
   ;; (print-bin (logand two three five))
@@ -100,9 +104,51 @@ lengths"
   ;; (print-bin (logxor two three five
   ;; 		     zero six nine)))
 
-;; grab the fivers
-(remove-if-not #'fiver (car (parse2 "one.txt")))
-;; grab the sixers
-(remove-if-not #'sixer (car (parse2 "one.txt")))
+(defun get-fivers (elt)
+  (remove-if-not #'fiver elt))
+(defun get-sixers (elt)
+  (remove-if-not #'sixer elt))
+
+(defun find-n (len input)
+  (convert (find-if #'(lambda (x)
+			(= len (length x)))
+		    input)))
+
+(defun extract-key (mask)
+  (let ((keys
+	  '((#b1000000 . a)
+	    (#b0100000 . b)
+	    (#b0010000 . c)
+	    (#b0001000 . d)
+	    (#b0000100 . e)
+	    (#b0000010 . f)
+	    (#b0000001 . g))))
+  (cdr (assoc mask keys))))
+
+(let* ((input (car (parse2 "one.txt")))
+       (one (find-n 2 input))
+       (four (find-n 4 input))
+       (seven (find-n 3 input))
+       (eight (find-n 7 input))
+       (fivers (mapcar #'convert (get-fivers input)))
+       (sixers (mapcar #'convert (get-sixers input)))
+       (a (logxor one seven)) ; actually d
+       (f (apply #'logand one sixers)) ; actually e
+       (c (logxor f one)) ; actually a
+       (d (apply #'logand four fivers)) ; f
+       (b (logxor d four one)) ; g
+       (g (apply #'logxor a b f sixers))
+       (e (logxor #b1111111 a b c d f g)))
+  (print-bin (logior d g)) ; actually 1
+  (print-bin a)
+  (print-bin b)
+  (print-bin c)
+  (print-bin d)
+  (print-bin e)
+  (print-bin f)
+  (print-bin g))
 
 ;; compute masks from these and see what I can extract from that
+
+;; get letters corresponding to the input masks, then use those
+;; letters and the true masks to decode the message
