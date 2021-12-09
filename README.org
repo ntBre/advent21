@@ -445,3 +445,95 @@ My solutions to the [[https://adventofcode.com/][Advent of Code]] puzzles for 20
 	      minimizing (fuel-costp crabs i))))
 
   #+end_src
+
+* Day 8
+  What a tough one. This actually took me two days to work out. The
+  main idea is that the seven segments can be viewed as binary numbers
+  since they are either on or off in each digit. Once you convert the
+  signal patterns to bit vectors, you can use bitwise operations to
+  disentangle the components. As the first part shows, four of the
+  numbers (1 4 7 8) have unique lengths, so you can immediately tell
+  which strings correspond to those. For example, "ab" is obviously
+  the digit 1 since 1 is the only number made of two
+  segments. Similarly, "dab" must be 7 since 7 is the only digit made
+  of 3 segments. Convert these to binary:
+
+  #+begin_src text
+    1100000
+    1101000
+  #+end_src
+
+  then take the XOR to get =0001000=. Since
+
+  #+begin_src text
+    a -> 1000000
+    b -> 0100000
+    c -> 0010000
+    d -> 0001000
+    e -> 0000100
+    f -> 0000010
+    g -> 0000001
+  #+end_src
+
+  this gives you =d=. Looking at the true definitions of the segments
+  shows that the XOR of 1 and 7 should actually give us =a=. That
+  means that when you read a =d=, that should actually turn on the =a=
+  segment. The other combinations are a little trickier, but just
+  involve XOR and AND operations between groups of digits:
+
+  | Letter | Operations                            |
+  |--------+---------------------------------------|
+  | A      | 1 XOR 7                               |
+  | F      | 1 AND 0 AND 6 AND 9                   |
+  | C      | 1 XOR F                               |
+  | D      | 4 AND 2 AND 3 AND 5                   |
+  | B      | D XOR 4 XOR 1                         |
+  | G      | A XOR B XOR F XOR 0 XOR 6 XOR 9       |
+  | E      | 8 XOR A XOR B XOR C XOR D XOR F XOR G |
+
+  Define a function that's the reverse of the relationships above:
+
+  #+begin_src lisp
+    (defun extract-key (mask)
+      (let ((keys
+	      '((#b1000000 . a)
+		(#b0100000 . b)
+		(#b0010000 . c)
+		(#b0001000 . d)
+		(#b0000100 . e)
+		(#b0000010 . f)
+		(#b0000001 . g))))
+	(cdr (assoc mask keys))))
+  #+end_src
+
+  and call it like =(extract-key a)=, which gives =d= in the example
+  above. This lets you define a list like
+
+  #+begin_src lisp
+    `((,(extract-key a) . a)
+      (,(extract-key b) . b)
+      (,(extract-key c) . c)
+      (,(extract-key d) . d)
+      (,(extract-key e) . e)
+      (,(extract-key f) . f)
+      (,(extract-key g) . g))
+  #+end_src
+
+  that matches up the read-in values on the left to their actual
+  values. Expanding this in the example case gives
+
+  #+begin_src lisp
+    `((d . a)
+      (e . b)
+      (a . c)
+      (f . d)
+      (g . e)
+      (b . f)
+      (c . g))
+  #+end_src
+
+  which you can use to decode the digits. I probably over-complicated
+  this problem a bit, but after how long it took I'm just proud to
+  have finished it, and I had fun playing with binary again. I think
+  this is an elegant solution at a high level as well, although the
+  implementation may not be as clean as it could be.
